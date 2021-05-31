@@ -8,10 +8,10 @@ Vinícius Silva Fernandes Kuhlmann
 The program comes with a makefile, type "make all" in the terminal to compile
 
 ### Execution
-Type make server to setup a server in 0.0.0.0:54000. 
-Type make client to connect to 0.0.0.0:54000. 
-Type "./socket server IP PORT" to setup a host to specified IP address and port. 
-Type "./socket client IP PORT" to connect to a server located at the specified IP address and port. 
+Type make server to setup a server in 0.0.0.0:54000.  
+Type make client to connect to 0.0.0.0:54000.  
+Type "./socket server IP PORT" to setup a host to specified IP address and port.  
+Type "./socket client IP PORT" to connect to a server located at the specified IP address and port.  
 
 ### Features
 - [x] TCP connection between terminals
