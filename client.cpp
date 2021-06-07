@@ -73,8 +73,9 @@ int main(int argc, char *argv[])
     int port = stoi(argv[2]);
 
     // Make socket
-    int socket = socket(AF_INET, SOCK_STREAM, 0);       // SOCK_STREAM for TCP, reliable, connection oriented
-    if (socket == -1)
+    int sv_socket;
+    sv_socket = socket(AF_INET, SOCK_STREAM, 0);        // SOCK_STREAM for TCP, reliable, connection oriented
+    if (sv_socket == -1)
     {
         cout << "Couldn't create socket\n";
         return 1;
@@ -88,7 +89,7 @@ int main(int argc, char *argv[])
     memset(&hint.sin_zero, 0, sizeof(hint.sin_zero));   // Set sin_zero element to zero
 
     // Connect to server
-    if(connect(socket, (struct sockaddr*)&hint, sizeof(hint)) == -1)
+    if(connect(sv_socket, (struct sockaddr*)&hint, sizeof(hint)) == -1)
     {
         cout << "Couldn't connect to server\n";
         return 5;
@@ -98,8 +99,8 @@ int main(int argc, char *argv[])
     printf("Connected to %s:%d\n", ip, port);
 
     // Start client threads
-    thread th_listener(listener, socket, "client");
-    thread th_sendmessage(sendmessage, socket, "client");
+    thread th_listener(listener, sv_socket, "client");
+    thread th_sendmessage(sendmessage, sv_socket, "client");
 
     while (!done) {};
  
