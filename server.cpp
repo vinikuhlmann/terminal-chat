@@ -65,11 +65,14 @@ int listener(int __socket, string type)
 
 void acceptClient(int sv_socket)
 {
+    sockaddr_in client;                         // Client's address
+    socklen_t client_size = sizeof(client);     // Client's address size
+
     int cl_socket = accept(sv_socket, (sockaddr*)&client, &client_size);
     if (cl_socket == -1)
     {
         cout << "Couldn't accept a client's connection\n";
-        return 4;
+        return;
     }
 
     char host[NI_MAXHOST];                              // Client's remote name
@@ -93,19 +96,19 @@ void acceptClient(int sv_socket)
     // Start server threads
     thread th_listener(listener, cl_socket, "server");
     thread th_sendmessage(sendmessage, cl_socket, "server");
-    th_listener.join();
-    th_sendmessage.join();
+    th_listener.detach();
+    th_sendmessage.detach();
 }
 
 /*
 *   argv[1] = server IP address
 *   argv[2] = server socket port
 */
-int main(int argc, int *argv[])
+int main(int argc, char *argv[])
 {
     // Get execution commands
     const char *ip = argv[1];
-    int port = stoi(argv[2]);
+    int port = std::stoi(argv[2]);
 
     // Make server socket
     int sv_socket;
@@ -142,7 +145,7 @@ int main(int argc, int *argv[])
         }
 
         thread th_accept(acceptClient, sv_socket);
-        th_accept.detach();
+        th_accept.join();
     };
  
     return 0;
