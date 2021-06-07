@@ -1,8 +1,9 @@
 all:
-	g++ socket.cpp -o socket -pthread -std=c++11
+	g++ client.cpp -o client -pthread -std=c++11
+	g++ server.cpp -o server -pthread -std=c++11
 
 server:
-	./socket 0.0.0.0 54000
+	./server 0.0.0.0 54000
 
 client:
-	./socket 0.0.0.0 54000
+	./client 0.0.0.0 54000
