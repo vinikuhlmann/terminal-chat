@@ -3,6 +3,7 @@ A c++ terminal program that implements real-time chat between many users through
 
 ### Authors
 Vinícius Silva Fernandes Kuhlmann
+Pablo Ernani Nogueira de Oliveira - 11215702
 
 ### Compilation
 The program comes with a makefile, type "make all" in the terminal to compile.
