@@ -101,6 +101,8 @@ int main(int argc, char *argv[])
     // Start client threads
     thread th_listener(listener, sv_socket, "client");
     thread th_sendmessage(sendmessage, sv_socket, "client");
+    th_listener.detach();
+    th_sendmessage.detach();
 
     while (!done) {};
  

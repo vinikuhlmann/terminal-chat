@@ -9,52 +9,76 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <set>
+#include <iterator>
  
 using namespace std;
 
 bool done = false;
+bool debug = true;
+set<int> cl_socket_set; // Stores all the client sockets
 
-int sendmessage(int __socket, string type)
+int sendmessage()
 {
     int  bytes_sent;     // Bytes sent to the socket
     char message[4096];  // Message buffer
 
-    do
+    while (true)
     {
         fgets(message, 4096, stdin);                                // Get input
         message[strlen(message)-1] = '\0';                          // Place null terminator at the end of the string
-        bytes_sent = send(__socket, message, strlen(message), 0);   // Send message
+        
+        // End the execution if quit() has been typed
+        if (strcmp(message, "quit()") == 0)
+            exit(0);
+
+        // Send the message to every client
+        for (auto cl_socket = cl_socket_set.begin(); cl_socket != cl_socket_set.end(); cl_socket++)
+            bytes_sent += send(*cl_socket, message, strlen(message), 0);
+
+        if (debug) cout << "messagge (" << message << ") sent to a client\n";
     }
-    while (bytes_sent > 0);  // Stop if empty message was sent
 
     done = true;
 
     if (bytes_sent == -1)
     {
-        cout << "Error in sending message\n";
+        cerr << "Error in sending message\n";
         return 1;
     }
 
     return 0;
 }
 
-int listener(int __socket, string type)
+// Listener function, the iterator refers to the position of the socket inside the list of sockets
+int listener(set<int>::iterator cl_socket_it)
 {
     int bytes_received; // Bytes received at the socket
-    char answer[4096];   // Message buffer
+    char answer[4096];  // Message buffer
 
-    do
+    while (!done)
     {
-        bytes_received = recv(__socket, answer, 4096, 0);   // Receive message
-        answer[bytes_received] = '\0';                      // Place null terminator at the end of the string
-        cout << answer << endl;                             // Print message
-        send(__socket, answer, strlen(answer), 0);          // Echo message back
+        bytes_received = recv(*cl_socket_it, answer, 4096, 0);  // Receive message
+        answer[bytes_received] = '\0';                          // Place null terminator at the end of the string
+        cout << answer << endl;                                 // Print message
+
+        // Echo message back to all clients, except the one who sent it
+        for (auto cl_socket = cl_socket_set.begin(); cl_socket != cl_socket_set.end(); cl_socket++)
+            if (*cl_socket != *cl_socket_it)
+                send(*cl_socket, answer, strlen(answer), 0);
+        
+        // Cliend sent empty message or error, close listener thread
+        if (bytes_received <= 0) {
+            cl_socket_set.erase(cl_socket_it);
+            break;
+        }
+
+        else if (debug) cout << "Message received and echoed back to other clients\n";
     }
-    while(bytes_received > 0);    // Stop if empty message was received
 
     if (bytes_received == -1)
     {
-        cout << "Error in receiving message\n";
+        cerr << "Error in receiving message\n";
         return 1;
     }
 
@@ -63,7 +87,8 @@ int listener(int __socket, string type)
     return 0;
 }
 
-void acceptClient(int sv_socket)
+// Connects client to server and starts listening thread
+int acceptClient(int sv_socket)
 {
     sockaddr_in client;                         // Client's address
     socklen_t client_size = sizeof(client);     // Client's address size
@@ -71,8 +96,8 @@ void acceptClient(int sv_socket)
     int cl_socket = accept(sv_socket, (sockaddr*)&client, &client_size);
     if (cl_socket == -1)
     {
-        cout << "Couldn't accept a client's connection\n";
-        return;
+        cerr << "Couldn't accept a client's connection\n";
+        return 1;
     }
 
     char host[NI_MAXHOST];                              // Client's remote name
@@ -93,11 +118,15 @@ void acceptClient(int sv_socket)
     // Print the host's information
     cout << hostInfo << " connected\n";
 
-    // Start server threads
-    thread th_listener(listener, cl_socket, "server");
-    thread th_sendmessage(sendmessage, cl_socket, "server");
+    // Insert the socket into the list of client sockets and start server threads
+    thread th_listener(listener, cl_socket_set.insert(cl_socket).first);
+
+    if (debug) cout << "listener thread for " << hostInfo << " started\n";
+
+    // Detach threads to allow execution after function ends
     th_listener.detach();
-    th_sendmessage.detach();
+
+    return 0;
 }
 
 /*
@@ -115,7 +144,7 @@ int main(int argc, char *argv[])
     sv_socket = socket(AF_INET, SOCK_STREAM, 0);        // SOCK_STREAM for TCP, reliable, connection oriented
     if (sv_socket == -1)
     {
-        cout << "Couldn't create socket\n";
+        cerr << "Couldn't create socket\n";
         return 1;
     }
 
@@ -133,18 +162,31 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    printf("Socket created on %s:%d\n", ip, port);
+    if (debug) printf("Socket created on %s:%d\n", ip, port);
 
+    // Start sendmessage thread
+    thread th_sendmessage(sendmessage);
+    th_sendmessage.detach();
+
+    if (debug) cout << "sendmessage thread started\n";
 
     // Listen to clients
     while (!done) {
+
         if (listen(sv_socket, SOMAXCONN) == -1)
         {
-            cout << "Couldn't prepare to accept connections\n";
+            cerr << "Couldn't prepare to accept connections\n";
             return 3;
         }
 
+        if (debug) cout << "socket set for listening\n";
+
+        // Instantiate function for accepting clients
         thread th_accept(acceptClient, sv_socket);
+
+        if (debug) cout << "acceptClient thread started\n";
+
+        // Wait until a connection has been made to create another thread
         th_accept.join();
     };
  
