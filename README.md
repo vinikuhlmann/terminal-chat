@@ -6,7 +6,7 @@ Vinícius Silva Fernandes Kuhlmann - 11215751
 Pablo Ernani Nogueira de Oliveira - 11215702  
 
 ###
-Compiled on gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
+Compiled on g++ (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
 
 ### Compilation
 The program comes with a makefile, type "make all" in the terminal to compile.
