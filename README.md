@@ -12,8 +12,8 @@ Compiled on g++ (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
 The program comes with a makefile, type "make all" in the terminal to compile.
 
 ### Execution
-Type make newserver to setup a server in 0.0.0.0:54000.
-Type make newclient to connect to 0.0.0.0:54000.
+Type make newserver to setup a server in 0.0.0.0:54000.  
+Type make newclient to connect to 0.0.0.0:54000.  
 Type "./server IP PORT" to setup a host to specified IP address and port.  
 Type "./client IP PORT" to connect to a server located at the specified IP address and port.  
 
